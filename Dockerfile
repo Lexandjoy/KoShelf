@@ -1,28 +1,28 @@
-# 1) Build dos assets (Tailwind)
-FROM node:18-alpine AS build
-
+# 1. Build do Rust e CSS
+FROM rust:1.72 AS builder
 WORKDIR /app
+COPY . .
+RUN cargo build --release
 
-# Copiar package.json e instalar todas as dependências (incluindo dev)
+# Tailwind build
+FROM node:18-alpine AS css-build
+WORKDIR /app
 COPY package*.json ./
 RUN npm ci
-
-# Copiar o código e gerar CSS otimizado
 COPY . .
 RUN npm run build-css-prod
 
-# 2) Servir estáticos com Nginx
-FROM nginx:alpine
+# 2. Imagem final leve
+FROM debian:bullseye-slim
+WORKDIR /app
 
-# Remover conteúdo default do Nginx
-RUN rm -rf /usr/share/nginx/html/*
+# Binário Rust
+COPY --from=builder /app/target/release/koshelf /app/koshelf
+# CSS e assets
+COPY --from=css-build /app/assets /app/assets
+COPY templates /app/templates
+# Config e pastas necessárias
 
-# Copiar HTML/JS (assumindo index.html na raiz) e assets gerados
-COPY index.html /usr/share/nginx/html/
-COPY assets /usr/share/nginx/html/assets
-
-# Expor porta 3000 para o Coolify
 EXPOSE 3000
 
-# Iniciar Nginx em primeiro plano
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/app/koshelf"]
