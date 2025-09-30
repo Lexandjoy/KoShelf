@@ -1,5 +1,5 @@
-# 1. Build do Rust e CSS
-FROM rust:1.72 AS builder
+# 1. Build do Rust e CSSFROM rustlang/rust:nightly AS builder
+FROM rustlang/rust:nightly AS builder
 WORKDIR /app
 COPY . .
 RUN cargo build --release
