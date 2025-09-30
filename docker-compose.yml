@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  koshelf:
+    build: .
+    ports:
+      - "2980:3000"
+    environment:
+      - NODE_ENV=production
