@@ -1,18 +1,28 @@
-FROM node:18-alpine
+# 1) Build dos assets (Tailwind)
+FROM node:18-alpine AS build
 
 WORKDIR /app
 
-# Copiar package.json e package-lock.json (se existir)
+# Copiar package.json e instalar todas as dependências (incluindo dev)
 COPY package*.json ./
+RUN npm ci
 
-# Instalar dependências
-RUN npm ci --omit=dev
-
-# Copiar todo o código
+# Copiar o código e gerar CSS otimizado
 COPY . .
+RUN npm run build-css-prod
 
-# Expor a porta usada pela aplicação
+# 2) Servir estáticos com Nginx
+FROM nginx:alpine
+
+# Remover conteúdo default do Nginx
+RUN rm -rf /usr/share/nginx/html/*
+
+# Copiar HTML/JS (assumindo index.html na raiz) e assets gerados
+COPY index.html /usr/share/nginx/html/
+COPY assets /usr/share/nginx/html/assets
+
+# Expor porta 3000 para o Coolify
 EXPOSE 3000
 
-# Comando para iniciar a aplicação diretamente
-CMD ["npm", "start"]
+# Iniciar Nginx em primeiro plano
+CMD ["nginx", "-g", "daemon off;"]
