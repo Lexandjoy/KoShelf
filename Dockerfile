@@ -6,16 +6,13 @@ WORKDIR /app
 COPY package*.json ./
 
 # Instalar dependências
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
-# Copiar o código da aplicação
+# Copiar todo o código
 COPY . .
 
-# Build da aplicação (se necessário)
-RUN npm run build
-
-# Expor a porta
+# Expor a porta usada pela aplicação
 EXPOSE 3000
 
-# Comando para iniciar
+# Comando para iniciar a aplicação diretamente
 CMD ["npm", "start"]
